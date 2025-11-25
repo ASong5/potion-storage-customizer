@@ -22,6 +22,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -98,7 +99,7 @@ public class PotionStorageCustomizerPlugin extends Plugin {
 
         for (PotionSectionWidget section : panel.potionSections) {
             for (PotionWidget potion : section.potions) {
-                currentPotions.add(potion.nameLabel.getText());
+                currentPotions.add(potion.getName());
             }
         }
 
@@ -216,7 +217,7 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         pos.index = potion.index;
         pos.section = potion.section.category;
 
-        savedPositions.put(potion.nameLabel.getText(), pos);
+        savedPositions.put(potion.getName(), pos);
         savePositionsToConfig();
     }
 

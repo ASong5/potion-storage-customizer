@@ -53,6 +53,14 @@ class PotionWidget {
         }
     }
 
+    public String getName() {
+        String regex = "\\([0-9]\\)";
+        // trim dose text from name
+        String trimmedName = nameLabel.getText().replaceAll(regex, "");
+
+        return trimmedName;
+    }
+
     public void swap(PotionWidget source, PotionWidget target, PotionStorageCustomizerPlugin plugin) {
         if (source == null || target == null) {
             log.warn("source or target are null, cannot swap");
