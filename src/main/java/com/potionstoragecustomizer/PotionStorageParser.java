@@ -1,9 +1,7 @@
 package com.potionstoragecustomizer;
 
 import java.util.Arrays;
-
 import com.potionstoragecustomizer.PotionSectionWidget.Category;
-
 import net.runelite.api.widgets.Widget;
 
 class PotionStorageParser {
@@ -12,13 +10,11 @@ class PotionStorageParser {
     static final int DOSE_OFFSET = 3;
     static final int FAV_OFFSET = 4;
     static final int NEXT_POTION_OFFSET = 5;
-
     static final int REMOVE_FAVOURITE_SPRITE_ID = 1340;
     static final int FAVOURITE_SPRITE_ID = 1341;
 
     public static PotionPanelWidget parse(Widget[] flatArray, Widget psItems, PotionStorageCustomizerPlugin plugin) {
         PotionPanelWidget panel = new PotionPanelWidget(plugin);
-
         PotionSectionWidget favouritesSection = new PotionSectionWidget(Category.FAVOURITES);
         PotionSectionWidget potionsSection = new PotionSectionWidget(Category.POTIONS);
         PotionSectionWidget unfinishedSection = new PotionSectionWidget(Category.UNFINISHED_POTIONS);
@@ -28,6 +24,7 @@ class PotionStorageParser {
                 i++;
                 continue;
             }
+
             if (flatArray[i].getText().contains("Favourites")) {
                 favouritesSection.createBoundary(flatArray[i + 1].getOriginalHeight(), flatArray[i + 1].getOriginalY(),
                         psItems);
@@ -48,17 +45,17 @@ class PotionStorageParser {
                     .contains(flatArray[i].getSpriteId())) {
                 i++;
             }
+
             if (i + FAV_OFFSET < flatArray.length) {
                 Widget container = flatArray[i];
                 Widget name = flatArray[i + NAME_OFFSET];
                 Widget icon = flatArray[i + ICON_OFFSET];
                 Widget dose = flatArray[i + DOSE_OFFSET];
                 Widget favourite = flatArray[i + FAV_OFFSET];
-
                 int favouriteSpriteId = flatArray[i + FAV_OFFSET].getSpriteId();
+
                 if (favouriteSpriteId == REMOVE_FAVOURITE_SPRITE_ID) {
-                    PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite, favouritesSection,
-                            favouritesSection.potions.size());
+                    PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite, favouritesSection, favouritesSection.potions.size());
                     favouritesSection.potions.add(potion);
                     i += NEXT_POTION_OFFSET;
                     continue;
@@ -80,10 +77,11 @@ class PotionStorageParser {
             }
             i++;
         }
+
         panel.potionSections.add(favouritesSection);
         panel.potionSections.add(potionsSection);
         panel.potionSections.add(unfinishedSection);
-
+        
         return panel;
     }
 }

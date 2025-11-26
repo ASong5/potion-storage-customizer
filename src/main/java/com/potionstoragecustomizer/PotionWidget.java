@@ -1,8 +1,11 @@
 package com.potionstoragecustomizer;
 
+import java.util.Map;
+
+import com.potionstoragecustomizer.PotionStorageCustomizerPlugin.PotionPositions;
+
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.ScriptEvent;
 import net.runelite.api.widgets.JavaScriptCallback;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetConfig;
@@ -28,7 +31,8 @@ class PotionWidget {
         this.index = index;
     }
 
-    public void setDraggable(boolean draggable, PotionStorageCustomizerPlugin plugin) {
+    public void setDraggable(boolean draggable, PotionStorageCustomizerPlugin plugin, PotionPanelWidget panel,
+            Map<String, PotionPositions> savedPositions) {
         int mask = container.getClickMask();
         Client client = plugin.getClient();
         if (draggable) {
@@ -45,7 +49,7 @@ class PotionWidget {
 
                 if (target != null && target != this) {
                     log.info("Found target: {}", target.nameLabel.getText());
-                    swap(section.getPositionByContainer(event.getSource()), target, plugin);
+                    swap(section.getPositionByContainer(event.getSource()), target, plugin, panel, savedPositions);
                 }
             });
         } else {
@@ -54,14 +58,15 @@ class PotionWidget {
     }
 
     public String getName() {
-        String regex = "\\([0-9]\\)";
+        String regex = "\\([0-9]+\\)";
         // trim dose text from name
-        String trimmedName = nameLabel.getText().replaceAll(regex, "");
+        String trimmedName = nameLabel.getText().replaceAll(regex, "").trim();
 
         return trimmedName;
     }
 
-    public void swap(PotionWidget source, PotionWidget target, PotionStorageCustomizerPlugin plugin) {
+    public void swap(PotionWidget source, PotionWidget target, PotionStorageCustomizerPlugin plugin,
+            PotionPanelWidget panel, Map<String, PotionPositions> savedPositions) {
         if (source == null || target == null) {
             log.warn("source or target are null, cannot swap");
             return;
@@ -130,8 +135,12 @@ class PotionWidget {
         target.doseLabel.revalidate();
         target.favButton.revalidate();
 
-        plugin.savePosition(source);
-        plugin.savePosition(target);
+        int tempIndex = source.index;
+        source.index = target.index;
+        target.index = tempIndex;
+
+        panel.savePosition(source, savedPositions);
+        panel.savePosition(target, savedPositions);
     }
 
     public void hide() {

@@ -1,16 +1,12 @@
 package com.potionstoragecustomizer;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.inject.Inject;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
@@ -54,8 +50,9 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         PotionSectionWidget.Category section;
     }
 
-    private final Map<String, PotionPositions> savedPositions = new HashMap<>();
+    private Map<PotionSectionWidget.Category, Integer> lastSectionCounts = new HashMap<>();
 
+    private final Map<String, PotionPositions> savedPositions = new HashMap<>();
     private PotionPanelWidget panel;
 
     @Subscribe
@@ -71,154 +68,25 @@ public class PotionStorageCustomizerPlugin extends Plugin {
             return;
 
         Widget[] potions = psItems.getDynamicChildren();
-        panel = PotionStorageParser.parse(potions, psItems, this);
 
-        pruneMissingPotions();
-
-        boolean layoutChanged = detectLayoutChange(panel);
-
-        if (layoutChanged) {
-            recalculateAllPositions(panel);
-        } else {
-            panel.applyCustomPositions(savedPositions);
-
-            for (PotionSectionWidget section : panel.potionSections) {
-                for (PotionWidget potion : section.potions) {
-                    if (savedPositions.get(potion.nameLabel.getText()) == null) {
-                        savePosition(potion);
-                    }
-                }
-            }
-        }
-
-        panel.enableDrag(true);
-    }
-
-    private void pruneMissingPotions() {
-        Set<String> currentPotions = new HashSet<>();
-
-        for (PotionSectionWidget section : panel.potionSections) {
-            for (PotionWidget potion : section.potions) {
-                currentPotions.add(potion.getName());
-            }
-        }
-
-        savedPositions.entrySet().removeIf(entry -> !currentPotions.contains(entry.getKey()));
-
-        savePositionsToConfig();
-    }
-
-    private Map<PotionSectionWidget.Category, Integer> lastSectionCounts = new HashMap<>();
-
-    private boolean detectLayoutChange(PotionPanelWidget panel) {
-        boolean changed = false;
-
-        for (PotionSectionWidget section : panel.potionSections) {
-            Integer lastCount = lastSectionCounts.get(section.category);
-            int currentCount = section.potions.size();
-
-            if (lastCount == null || lastCount != currentCount) {
-                changed = true;
-            }
-
-            lastSectionCounts.put(section.category, currentCount);
-        }
-
-        return changed;
-    }
-
-    private void recalculateAllPositions(PotionPanelWidget panel) {
-        for (PotionSectionWidget section : panel.potionSections) {
-            sortPotionsByCustomOrder(section);
-            repositionSectionPotions(section);
-        }
-    }
-
-    private void sortPotionsByCustomOrder(PotionSectionWidget section) {
-        section.potions.sort((a, b) -> {
-            PotionPositions posA = savedPositions.get(a.nameLabel.getText());
-            PotionPositions posB = savedPositions.get(b.nameLabel.getText());
-
-            int indexA = (posA != null && posA.section == section.category)
-                    ? posA.index
-                    : Integer.MAX_VALUE;
-            int indexB = (posB != null && posB.section == section.category)
-                    ? posB.index
-                    : Integer.MAX_VALUE;
-
-            return Integer.compare(indexA, indexB);
-        });
-    }
-
-    private void repositionSectionPotions(PotionSectionWidget section) {
-        if (section.potions.isEmpty())
+        if (potions.length == 0)
             return;
 
-        int baseX = Integer.MAX_VALUE;
-        int baseY = Integer.MAX_VALUE;
+        panel = PotionStorageParser.parse(potions, psItems, this);
 
-        for (PotionWidget potion : section.potions) {
-            baseX = Math.min(baseX, potion.container.getOriginalX());
-            baseY = Math.min(baseY, potion.container.getOriginalY());
+        panel.pruneMissingPotions(savedPositions);
+
+        boolean layoutChanged = panel.detectLayoutChange(lastSectionCounts);
+        if (layoutChanged) {
+            panel.recalculateAllPositions(savedPositions);
+            log.info("detectLayoutChanged()");
+        } else {
+            panel.applyCustomPositions(savedPositions);
         }
+        panel.enableDrag(true, savedPositions);
 
-        PotionWidget firstPotion = section.potions.get(0);
-        int width = firstPotion.container.getOriginalWidth();
-        int height = firstPotion.container.getOriginalHeight();
-
-        for (int i = 0; i < section.potions.size(); i++) {
-            PotionWidget potion = section.potions.get(i);
-
-            int row = i / 2;
-            int col = i % 2;
-
-            int newX = baseX + (col * width);
-            int newY = baseY + (row * height);
-
-            int iconOffsetX = potion.icon.getOriginalX() - potion.container.getOriginalX();
-            int iconOffsetY = potion.icon.getOriginalY() - potion.container.getOriginalY();
-            int nameOffsetX = potion.nameLabel.getOriginalX() - potion.container.getOriginalX();
-            int nameOffsetY = potion.nameLabel.getOriginalY() - potion.container.getOriginalY();
-            int doseOffsetX = potion.doseLabel.getOriginalX() - potion.container.getOriginalX();
-            int doseOffsetY = potion.doseLabel.getOriginalY() - potion.container.getOriginalY();
-            int favOffsetX = potion.favButton.getOriginalX() - potion.container.getOriginalX();
-            int favOffsetY = potion.favButton.getOriginalY() - potion.container.getOriginalY();
-
-            potion.container.setOriginalX(newX);
-            potion.container.setOriginalY(newY);
-            potion.icon.setOriginalX(newX + iconOffsetX);
-            potion.icon.setOriginalY(newY + iconOffsetY);
-            potion.nameLabel.setOriginalX(newX + nameOffsetX);
-            potion.nameLabel.setOriginalY(newY + nameOffsetY);
-            potion.doseLabel.setOriginalX(newX + doseOffsetX);
-            potion.doseLabel.setOriginalY(newY + doseOffsetY);
-            potion.favButton.setOriginalX(newX + favOffsetX);
-            potion.favButton.setOriginalY(newY + favOffsetY);
-
-            potion.index = i;
-
-            potion.container.revalidate();
-            potion.icon.revalidate();
-            potion.nameLabel.revalidate();
-            potion.doseLabel.revalidate();
-            potion.favButton.revalidate();
-
-            savePosition(potion);
-        }
-    }
-
-    public void savePosition(PotionWidget potion) {
-        PotionPositions pos = new PotionPositions();
-        pos.container = new Point(potion.container.getOriginalX(), potion.container.getOriginalY());
-        pos.icon = new Point(potion.icon.getOriginalX(), potion.icon.getOriginalY());
-        pos.nameLabel = new Point(potion.nameLabel.getOriginalX(), potion.nameLabel.getOriginalY());
-        pos.doseLabel = new Point(potion.doseLabel.getOriginalX(), potion.doseLabel.getOriginalY());
-        pos.favButton = new Point(potion.favButton.getOriginalX(), potion.favButton.getOriginalY());
-        pos.index = potion.index;
-        pos.section = potion.section.category;
-
-        savedPositions.put(potion.getName(), pos);
         savePositionsToConfig();
+        saveSectionCountsToConfig();
     }
 
     private void savePositionsToConfig() {
@@ -231,9 +99,26 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         if (json == null || json.isEmpty()) {
             return;
         }
-        savedPositions.putAll(gson.fromJson(json, new TypeToken<Map<String, PotionPositions>>() {
-        }.getType()));
+        savedPositions
+                .putAll(gson.fromJson(json, new com.google.gson.reflect.TypeToken<Map<String, PotionPositions>>() {
+                }.getType()));
         log.info("Loaded {} saved positions", savedPositions.size());
+    }
+
+    private void saveSectionCountsToConfig() {
+        String json = gson.toJson(lastSectionCounts);
+        configManager.setConfiguration("potionstoragecustomizer", "sectionCounts", json);
+    }
+
+    private void loadSectionCountsFromConfig() {
+        String json = configManager.getConfiguration("potionstoragecustomizer", "sectionCounts");
+        if (json == null || json.isEmpty()) {
+            return;
+        }
+        lastSectionCounts.putAll(gson.fromJson(json,
+                new com.google.gson.reflect.TypeToken<Map<PotionSectionWidget.Category, Integer>>() {
+                }.getType()));
+        log.info("Loaded section counts: {}", lastSectionCounts);
     }
 
     public Client getClient() {
@@ -242,8 +127,10 @@ public class PotionStorageCustomizerPlugin extends Plugin {
 
     @Override
     protected void startUp() {
-        // configManager.unsetConfiguration("potionstoragecustomizer", "potionPositions");
+        // configManager.unsetConfiguration("potionstoragecustomizer",
+        // "potionPositions");
         loadPositionsFromConfig();
+        loadSectionCountsFromConfig();
     }
 
     @Override
