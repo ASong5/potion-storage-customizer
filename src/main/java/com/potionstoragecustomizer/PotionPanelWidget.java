@@ -64,7 +64,6 @@ class PotionPanelWidget {
         pos.section = potion.section.category;
 
         savedPositions.put(potion.getName(), pos);
-        log.info("{} - index: {}, section: {}", potion.getName(), pos.index, pos.section);
     }
 
     public void recalculateAllPositions(Map<String, PotionPositions> savedPositions) {

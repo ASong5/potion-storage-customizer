@@ -1,6 +1,7 @@
 package com.potionstoragecustomizer;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -100,7 +101,7 @@ public class PotionStorageCustomizerPlugin extends Plugin {
             return;
         }
         savedPositions
-                .putAll(gson.fromJson(json, new com.google.gson.reflect.TypeToken<Map<String, PotionPositions>>() {
+                .putAll(gson.fromJson(json, new TypeToken<Map<String, PotionPositions>>() {
                 }.getType()));
         log.info("Loaded {} saved positions", savedPositions.size());
     }
@@ -116,7 +117,7 @@ public class PotionStorageCustomizerPlugin extends Plugin {
             return;
         }
         lastSectionCounts.putAll(gson.fromJson(json,
-                new com.google.gson.reflect.TypeToken<Map<PotionSectionWidget.Category, Integer>>() {
+                new TypeToken<Map<PotionSectionWidget.Category, Integer>>() {
                 }.getType()));
         log.info("Loaded section counts: {}", lastSectionCounts);
     }
