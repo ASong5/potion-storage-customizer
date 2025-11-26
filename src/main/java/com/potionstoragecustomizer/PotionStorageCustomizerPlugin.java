@@ -32,9 +32,6 @@ public class PotionStorageCustomizerPlugin extends Plugin {
     private Client client;
 
     @Inject
-    private PotionStorageCustomizerConfig config;
-
-    @Inject
     ConfigManager configManager;
 
     @Inject
@@ -139,17 +136,5 @@ public class PotionStorageCustomizerPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         log.debug("Potion Storage Customizer stopped!");
-    }
-
-    @Subscribe
-    public void onGameStateChanged(GameStateChanged gameStateChanged) {
-        if (gameStateChanged.getGameState() == GameState.LOGGED_IN) {
-            client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Example says " + config.greeting(), null);
-        }
-    }
-
-    @Provides
-    PotionStorageCustomizerConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(PotionStorageCustomizerConfig.class);
     }
 }
