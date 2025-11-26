@@ -52,24 +52,6 @@ class PotionPanelWidget {
         return null;
     }
 
-    public void refreshPotionBars(Widget[] flatArray, List<PotionSectionWidget> sections) {
-        for (PotionSectionWidget section : sections) {
-            for (PotionWidget potion : section.potions) {
-                for (int i = 0; i < flatArray.length - 2; i++) {
-                    Widget bar = flatArray[i];
-                    Widget subBar = flatArray[i + 1];
-                    Widget barText = flatArray[i + 2];
-
-                    if (potion.container.contains(bar.getCanvasLocation()) &&
-                            potion.container.contains(subBar.getCanvasLocation())) {
-                        potion.setPotionBar(bar, subBar, barText);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     public void savePosition(PotionWidget potion, Map<String, PotionPositions> savedPositions) {
         PotionPositions pos = new PotionPositions();
         pos.container = new Point(potion.container.getOriginalX(), potion.container.getOriginalY());
