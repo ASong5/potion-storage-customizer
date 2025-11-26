@@ -17,6 +17,11 @@ class PotionWidget {
     Widget nameLabel;
     Widget doseLabel;
     Widget favButton;
+
+    Widget potionBar;
+    Widget potionSubBar;
+    Widget potionBarText;
+
     int index;
     PotionSectionWidget section;
 
@@ -63,6 +68,12 @@ class PotionWidget {
         String trimmedName = nameLabel.getText().replaceAll(regex, "").trim();
 
         return trimmedName;
+    }
+
+    public void setPotionBar(Widget bar, Widget subBar, Widget barText) {
+        potionBar = bar;
+        potionSubBar = subBar;
+        potionBarText = barText;
     }
 
     public void swap(PotionWidget source, PotionWidget target, PotionStorageCustomizerPlugin plugin,
@@ -133,6 +144,49 @@ class PotionWidget {
         target.icon.revalidate();
         target.nameLabel.revalidate();
         target.doseLabel.revalidate();
+
+        if (source.potionBar != null && source.potionSubBar != null && source.potionBarText != null
+                && target.potionBar != null && target.potionSubBar != null && target.potionBarText != null) {
+            int sourceBarX = source.potionBar.getOriginalX();
+            int sourceBarY = source.potionBar.getOriginalY();
+            int sourceSubBarX = source.potionSubBar.getOriginalX();
+            int sourceSubBarY = source.potionSubBar.getOriginalY();
+            int sourceBarTextX = source.potionBarText.getOriginalX();
+            int sourceBarTextY = source.potionBarText.getOriginalY();
+
+            int targetBarX = target.potionBar.getOriginalX();
+            int targetBarY = target.potionBar.getOriginalY();
+            int targetSubBarX = target.potionSubBar.getOriginalX();
+            int targetSubBarY = target.potionSubBar.getOriginalY();
+            int targetBarTextX = target.potionBarText.getOriginalX();
+            int targetBarTextY = target.potionBarText.getOriginalY();
+
+            source.potionBar.setOriginalX(targetBarX);
+            source.potionBar.setOriginalY(targetBarY);
+            target.potionBar.setOriginalX(sourceBarX);
+            target.potionBar.setOriginalY(sourceBarY);
+
+            source.potionSubBar.setOriginalX(targetSubBarX);
+            source.potionSubBar.setOriginalY(targetSubBarY);
+            target.potionSubBar.setOriginalX(sourceSubBarX);
+            target.potionSubBar.setOriginalY(sourceSubBarY);
+
+            source.potionBarText.setOriginalX(targetBarTextX);
+            source.potionBarText.setOriginalY(targetBarTextY);
+            target.potionBarText.setOriginalX(sourceBarTextX);
+            target.potionBarText.setOriginalY(sourceBarTextY);
+
+            source.potionBar.revalidate();
+            source.potionSubBar.revalidate();
+            source.potionBarText.revalidate();
+
+            target.potionBar.revalidate();
+            target.potionSubBar.revalidate();
+            target.potionBarText.revalidate();
+
+            log.info("potion bars swapped!");
+        }
+
         target.favButton.revalidate();
 
         int tempIndex = source.index;

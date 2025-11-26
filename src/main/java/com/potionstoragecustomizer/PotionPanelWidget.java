@@ -1,7 +1,6 @@
 package com.potionstoragecustomizer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +59,12 @@ class PotionPanelWidget {
         pos.nameLabel = new Point(potion.nameLabel.getOriginalX(), potion.nameLabel.getOriginalY());
         pos.doseLabel = new Point(potion.doseLabel.getOriginalX(), potion.doseLabel.getOriginalY());
         pos.favButton = new Point(potion.favButton.getOriginalX(), potion.favButton.getOriginalY());
+        if (potion.potionBar != null && potion.potionSubBar != null && potion.potionBarText != null) {
+            pos.bar = new Point(potion.potionBar.getOriginalX(), potion.potionBar.getOriginalY());
+            pos.subBar = new Point(potion.potionSubBar.getOriginalX(), potion.potionSubBar.getOriginalY());
+            pos.barText = new Point(potion.potionBarText.getOriginalX(), potion.potionBarText.getOriginalY());
+            log.info("saving potion bar");
+        }
         pos.index = potion.index;
         pos.section = potion.section.category;
 
@@ -118,6 +123,30 @@ class PotionPanelWidget {
             int doseOffsetY = potion.doseLabel.getOriginalY() - potion.container.getOriginalY();
             int favOffsetX = potion.favButton.getOriginalX() - potion.container.getOriginalX();
             int favOffsetY = potion.favButton.getOriginalY() - potion.container.getOriginalY();
+
+            int barOffsetX = 0, barOffsetY = 0;
+            int subBarOffsetX = 0, subBarOffsetY = 0;
+            int barTextOffsetX = 0, barTextOffsetY = 0;
+
+            if (potion.potionBar != null && potion.potionSubBar != null && potion.potionBarText != null) {
+                barOffsetX = potion.potionBar.getOriginalX() - potion.container.getOriginalX();
+                barOffsetY = potion.potionBar.getOriginalY() - potion.container.getOriginalY();
+                subBarOffsetX = potion.potionSubBar.getOriginalX() - potion.container.getOriginalX();
+                subBarOffsetY = potion.potionSubBar.getOriginalY() - potion.container.getOriginalY();
+                barTextOffsetX = potion.potionBarText.getOriginalX() - potion.container.getOriginalX();
+                barTextOffsetY = potion.potionBarText.getOriginalY() - potion.container.getOriginalY();
+
+                potion.potionBar.setOriginalX(newX + barOffsetX);
+                potion.potionBar.setOriginalY(newY + barOffsetY);
+                potion.potionSubBar.setOriginalX(newX + subBarOffsetX);
+                potion.potionSubBar.setOriginalY(newY + subBarOffsetY);
+                potion.potionBarText.setOriginalX(newX + barTextOffsetX);
+                potion.potionBarText.setOriginalY(newY + barTextOffsetY);
+
+                potion.potionBar.revalidate();
+                potion.potionSubBar.revalidate();
+                potion.potionBarText.revalidate();
+            }
 
             potion.container.setOriginalX(newX);
             potion.container.setOriginalY(newY);
@@ -184,6 +213,19 @@ class PotionPanelWidget {
                 potion.doseLabel.setOriginalY(pos.doseLabel.getY());
                 potion.favButton.setOriginalX(pos.favButton.getX());
                 potion.favButton.setOriginalY(pos.favButton.getY());
+
+                if (potion.potionBar != null && potion.potionSubBar != null && potion.potionBarText != null
+                        && pos.bar != null && pos.subBar != null && pos.barText != null) {
+                    potion.potionBar.setOriginalX(pos.bar.getX());
+                    potion.potionBar.setOriginalY(pos.bar.getY());
+                    potion.potionSubBar.setOriginalX(pos.subBar.getX());
+                    potion.potionSubBar.setOriginalY(pos.subBar.getY());
+                    potion.potionBarText.setOriginalX(pos.barText.getX());
+                    potion.potionBarText.setOriginalY(pos.barText.getY());
+                    potion.potionBar.revalidate();
+                    potion.potionSubBar.revalidate();
+                    potion.potionBarText.revalidate();
+                }
 
                 potion.index = pos.index;
 

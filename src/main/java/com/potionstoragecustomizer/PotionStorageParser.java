@@ -1,9 +1,17 @@
 package com.potionstoragecustomizer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import com.potionstoragecustomizer.PotionSectionWidget.Category;
-import net.runelite.api.widgets.Widget;
+import java.util.List;
 
+import com.potionstoragecustomizer.PotionSectionWidget.Category;
+
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Point;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetType;
+
+@Slf4j
 class PotionStorageParser {
     static final int ICON_OFFSET = 1;
     static final int NAME_OFFSET = 2;
@@ -12,6 +20,8 @@ class PotionStorageParser {
     static final int NEXT_POTION_OFFSET = 5;
     static final int REMOVE_FAVOURITE_SPRITE_ID = 1340;
     static final int FAVOURITE_SPRITE_ID = 1341;
+
+    static final int POTION_STORAGE_PLUGIN_BAR_OFFSET = 3;
 
     public static PotionPanelWidget parse(Widget[] flatArray, Widget psItems, PotionStorageCustomizerPlugin plugin) {
         PotionPanelWidget panel = new PotionPanelWidget(plugin);
@@ -22,6 +32,18 @@ class PotionStorageParser {
         for (int i = 0; i < flatArray.length;) {
             if (flatArray[i].getText().contains("Vials")) {
                 i++;
+                continue;
+            }
+
+            if (flatArray[i].getType() == WidgetType.RECTANGLE && !flatArray[i].isHidden()
+                    && flatArray[i].getHeight() < potionsSection.potions.get(0).container.getOriginalHeight()
+                    && flatArray[i].getWidth() < psItems.getWidth() / 2) {
+                List<PotionSectionWidget> sections = new ArrayList<PotionSectionWidget>();
+                sections.add(favouritesSection);
+                sections.add(potionsSection);
+                sections.add(unfinishedSection);
+                parsePotionStorageBars(i, flatArray, sections);
+                i += POTION_STORAGE_PLUGIN_BAR_OFFSET;
                 continue;
             }
 
@@ -55,7 +77,8 @@ class PotionStorageParser {
                 int favouriteSpriteId = flatArray[i + FAV_OFFSET].getSpriteId();
 
                 if (favouriteSpriteId == REMOVE_FAVOURITE_SPRITE_ID) {
-                    PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite, favouritesSection, favouritesSection.potions.size());
+                    PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite, favouritesSection,
+                            favouritesSection.potions.size());
                     favouritesSection.potions.add(potion);
                     i += NEXT_POTION_OFFSET;
                     continue;
@@ -81,7 +104,28 @@ class PotionStorageParser {
         panel.potionSections.add(favouritesSection);
         panel.potionSections.add(potionsSection);
         panel.potionSections.add(unfinishedSection);
-        
+
         return panel;
+    }
+
+    public static void parsePotionStorageBars(int start, Widget[] flatArray, List<PotionSectionWidget> sections) {
+        Widget bar = flatArray[start];
+        Widget subBar = flatArray[start + 1];
+        Widget barText = flatArray[start + 2];
+
+        int barX = bar.getOriginalX();
+        int barY = bar.getOriginalY();
+
+        for (PotionSectionWidget section : sections) {
+            for (PotionWidget potion : section.potions) {
+                int doseX = potion.doseLabel.getOriginalX();
+                int doseY = potion.doseLabel.getOriginalY();
+
+                if (barX == doseX && barY == doseY) {
+                    potion.setPotionBar(bar, subBar, barText);
+                    return;
+                }
+            }
+        }
     }
 }

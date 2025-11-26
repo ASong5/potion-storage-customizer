@@ -47,6 +47,9 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         Point nameLabel;
         Point doseLabel;
         Point favButton;
+        Point bar;
+        Point subBar;
+        Point barText;
         int index;
         PotionSectionWidget.Category section;
     }
@@ -56,7 +59,8 @@ public class PotionStorageCustomizerPlugin extends Plugin {
     private final Map<String, PotionPositions> savedPositions = new HashMap<>();
     private PotionPanelWidget panel;
 
-    @Subscribe
+    // ensure this runs after potion storage bars plugin
+    @Subscribe(priority = -1)
     protected void onScriptPostFired(ScriptPostFired event) {
         if (event.getScriptId() == ScriptID.POTIONSTORE_BUILD) {
             rebuildPanel();
@@ -69,7 +73,6 @@ public class PotionStorageCustomizerPlugin extends Plugin {
             return;
 
         Widget[] potions = psItems.getDynamicChildren();
-
         if (potions.length == 0)
             return;
 
@@ -80,7 +83,6 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         boolean layoutChanged = panel.detectLayoutChange(lastSectionCounts);
         if (layoutChanged) {
             panel.recalculateAllPositions(savedPositions);
-            log.info("detectLayoutChanged()");
         } else {
             panel.applyCustomPositions(savedPositions);
         }
