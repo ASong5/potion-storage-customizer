@@ -20,6 +20,7 @@ import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetType;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -35,11 +36,16 @@ import net.runelite.client.plugins.PluginManager;
 @PluginDescriptor(name = "Potion Storage Customizer")
 @PluginDependency(AntiDragPlugin.class)
 public class PotionStorageCustomizerPlugin extends Plugin {
+    static final String CONFIG_GROUP = "potionsstoragecustomizer";
+
     @Inject
     private Client client;
 
     @Inject
     ConfigManager configManager;
+
+    @Inject
+    private PotionStorageCustomizerConfig config;
 
     @Inject
     private PluginManager pluginManager;
@@ -96,7 +102,7 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         } else {
             panel.applyCustomPositions(savedPositions);
         }
-        panel.enableDrag(true, savedPositions);
+        panel.enableDrag(!config.disableDrag(), savedPositions);
 
         savePositionsToConfig();
         saveSectionCountsToConfig();
@@ -154,6 +160,10 @@ public class PotionStorageCustomizerPlugin extends Plugin {
             int delay = getAntiDragDelay();
             panel.updateDragDeadTime(delay);
         }
+
+        if (CONFIG_GROUP.equals(event.getGroup())) {
+            panel.enableDrag(!config.disableDrag(), savedPositions);
+        }
     }
 
     @Subscribe
@@ -164,6 +174,11 @@ public class PotionStorageCustomizerPlugin extends Plugin {
             int delay = getAntiDragDelay();
             panel.updateDragDeadTime(delay);
         }
+    }
+
+    @Provides
+    PotionStorageCustomizerConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(PotionStorageCustomizerConfig.class);
     }
 
     public Client getClient() {

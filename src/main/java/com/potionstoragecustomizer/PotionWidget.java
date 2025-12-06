@@ -64,6 +64,9 @@ class PotionWidget {
             });
         } else {
             container.setClickMask(mask & ~WidgetConfig.DRAG & ~WidgetConfig.DRAG_ON);
+            container.setDragParent(null);
+            container.setDragDeadTime(0);
+            container.setOnDragCompleteListener((Object[]) null);
         }
     }
 
