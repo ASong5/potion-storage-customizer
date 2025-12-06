@@ -26,6 +26,12 @@ class PotionPanelWidget {
     }
 
     public void enableDrag(boolean dragEnabled, Map<String, PotionPositions> savedPositions) {
+        if (dragEnabled) {
+            for (PotionSectionWidget section : potionSections) {
+                sortPotionsByCustomOrder(section, savedPositions);
+            }
+        }
+
         for (PotionSectionWidget section : potionSections) {
             for (PotionWidget potion : section.potions) {
                 potion.setDraggable(dragEnabled, plugin, this, savedPositions);
