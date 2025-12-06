@@ -204,6 +204,7 @@ class PotionPanelWidget {
 
     public void applyCustomPositions(Map<String, PotionPositions> savedPositions) {
         for (PotionSectionWidget section : potionSections) {
+            sortPotionsByCustomOrder(section, savedPositions);
             for (PotionWidget potion : section.potions) {
                 String potionName = potion.getName();
                 PotionPositions pos = savedPositions.get(potionName);
