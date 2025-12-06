@@ -97,11 +97,19 @@ class PotionWidget {
             return;
         }
 
-        int sourceIndex = source.index;
-        int targetIndex = target.index;
+        int sourceListPos = section.potions.indexOf(source);
+        int targetListPos = section.potions.indexOf(target);
 
-        section.potions.remove(sourceIndex);
-        section.potions.add(targetIndex, source);
+        if (sourceListPos == -1 || targetListPos == -1) {
+            log.warn("Could not find source or target in list");
+            return;
+        }
+
+        log.info("INSERT MODE - source {} (list pos {}) | target {} (list pos {})",
+                source.nameLabel.getText(), sourceListPos, target.nameLabel.getText(), targetListPos);
+
+        section.potions.remove(sourceListPos);
+        section.potions.add(targetListPos, source);
 
         for (int i = 0; i < section.potions.size(); i++) {
             section.potions.get(i).index = i;
@@ -109,7 +117,10 @@ class PotionWidget {
 
         for (PotionWidget potion : section.potions) {
             PotionPositions pos = savedPositions.get(potion.getName());
-            if (pos != null) {
+            if (pos == null) {
+                log.warn("No saved position for {}, creating new entry", potion.getName());
+                panel.savePosition(potion, savedPositions);
+            } else {
                 pos.index = potion.index;
             }
         }
