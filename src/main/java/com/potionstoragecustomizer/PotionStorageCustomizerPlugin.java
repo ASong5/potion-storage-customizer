@@ -22,17 +22,30 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.events.PluginChanged;
 import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.antidrag.AntiDragConfig;
+import net.runelite.client.plugins.antidrag.AntiDragPlugin;
+import net.runelite.client.plugins.PluginManager;
 
 @Slf4j
 @PluginDescriptor(name = "Potion Storage Customizer")
+@PluginDependency(AntiDragPlugin.class)
 public class PotionStorageCustomizerPlugin extends Plugin {
     @Inject
     private Client client;
 
     @Inject
     ConfigManager configManager;
+
+    @Inject
+    private PluginManager pluginManager;
+
+    @Inject
+    private AntiDragPlugin antiDragPlugin;
 
     @Inject
     private Gson gson;
@@ -119,6 +132,38 @@ public class PotionStorageCustomizerPlugin extends Plugin {
                 new TypeToken<Map<PotionSectionWidget.Category, Integer>>() {
                 }.getType()));
         log.info("Loaded section counts: {}", lastSectionCounts);
+    }
+
+    private boolean isAntiDragActive() {
+        return antiDragPlugin != null && pluginManager.isPluginEnabled(antiDragPlugin);
+    }
+
+    public int getAntiDragDelay() {
+        if (!isAntiDragActive()) {
+            return 0;
+        }
+        return configManager.getConfig(AntiDragConfig.class).dragDelay();
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event) {
+        if (panel == null)
+            return;
+
+        if ("antiDrag".equals(event.getGroup())) {
+            int delay = getAntiDragDelay();
+            panel.updateDragDeadTime(delay);
+        }
+    }
+
+    @Subscribe
+    public void onPluginChanged(PluginChanged event) {
+        if (event.getPlugin() != null &&
+                event.getPlugin().getClass().equals(AntiDragPlugin.class) &&
+                panel != null) {
+            int delay = getAntiDragDelay();
+            panel.updateDragDeadTime(delay);
+        }
     }
 
     public Client getClient() {
