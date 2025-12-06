@@ -6,6 +6,7 @@ import com.potionstoragecustomizer.PotionStorageCustomizerPlugin.PotionPositions
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.widgets.JavaScriptCallback;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetConfig;
@@ -54,7 +55,15 @@ class PotionWidget {
 
                 if (target != null && target != this) {
                     log.info("Found target: {}", target.nameLabel.getText());
-                    swap(section.getPositionByContainer(event.getSource()), target, plugin, panel, savedPositions);
+                    boolean isInsertMode = client.getVarbitValue(VarbitID.BANK_INSERTMODE) == 1;
+                    log.info("insert mode: {}", isInsertMode);
+
+                    if (isInsertMode) {
+                        insert(section.getPositionByContainer(event.getSource()), target, plugin, panel,
+                                savedPositions);
+                    } else {
+                        swap(section.getPositionByContainer(event.getSource()), target, plugin, panel, savedPositions);
+                    }
                 }
             });
         } else {
@@ -74,6 +83,38 @@ class PotionWidget {
         potionBar = bar;
         potionSubBar = subBar;
         potionBarText = barText;
+    }
+
+    public void insert(PotionWidget source, PotionWidget target, PotionStorageCustomizerPlugin plugin,
+            PotionPanelWidget panel, Map<String, PotionPositions> savedPositions) {
+        if (source == null || target == null) {
+            log.warn("source or target are null, cannot insert");
+            return;
+        }
+
+        if (source.section != target.section) {
+            log.warn("cannot insert potions from different sections");
+            return;
+        }
+
+        int sourceIndex = source.index;
+        int targetIndex = target.index;
+
+        section.potions.remove(sourceIndex);
+        section.potions.add(targetIndex, source);
+
+        for (int i = 0; i < section.potions.size(); i++) {
+            section.potions.get(i).index = i;
+        }
+
+        for (PotionWidget potion : section.potions) {
+            PotionPositions pos = savedPositions.get(potion.getName());
+            if (pos != null) {
+                pos.index = potion.index;
+            }
+        }
+
+        panel.recalculateAllPositions(savedPositions);
     }
 
     public void swap(PotionWidget source, PotionWidget target, PotionStorageCustomizerPlugin plugin,

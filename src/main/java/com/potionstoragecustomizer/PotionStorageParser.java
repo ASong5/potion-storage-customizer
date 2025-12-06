@@ -108,7 +108,7 @@ class PotionStorageParser {
         return panel;
     }
 
-    public static void parsePotionStorageBars(int start, Widget[] flatArray, List<PotionSectionWidget> sections) {
+    private static void parsePotionStorageBars(int start, Widget[] flatArray, List<PotionSectionWidget> sections) {
         Widget bar = flatArray[start];
         Widget subBar = flatArray[start + 1];
         Widget barText = flatArray[start + 2];
