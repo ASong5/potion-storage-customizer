@@ -33,6 +33,14 @@ class PotionPanelWidget {
         }
     }
 
+    public void updateDragDeadTime(int delay) {
+        for (PotionSectionWidget section : potionSections) {
+            for (PotionWidget potion : section.potions) {
+                potion.changeDragDelay(delay);
+            }
+        }
+    }
+
     public void hidePanel() {
         for (PotionSectionWidget section : potionSections) {
             for (PotionWidget potion : section.potions) {

@@ -44,6 +44,11 @@ class PotionWidget {
             container.setDragParent(section.boundary);
             container.setClickMask(mask | WidgetConfig.DRAG | WidgetConfig.DRAG_ON);
 
+            int antiDragDelay = plugin.getAntiDragDelay();
+            container.setDragDeadTime(antiDragDelay);
+
+            log.info("Set drag dead time to {} client ticks for {}", antiDragDelay, nameLabel.getText());
+
             container.setOnDragCompleteListener((JavaScriptCallback) event -> {
                 log.info("Drag complete callback triggered");
                 log.info("Mouse X: {}, Mouse Y: {}", client.getMouseCanvasPosition().getX(),
@@ -59,7 +64,14 @@ class PotionWidget {
             });
         } else {
             container.setClickMask(mask & ~WidgetConfig.DRAG & ~WidgetConfig.DRAG_ON);
+            container.setDragParent(null);
+            container.setDragDeadTime(0);
+            container.setOnDragCompleteListener((Object[]) null);
         }
+    }
+
+    public void changeDragDelay(int newDelay) {
+        container.setDragDeadTime(newDelay);
     }
 
     public String getName() {
