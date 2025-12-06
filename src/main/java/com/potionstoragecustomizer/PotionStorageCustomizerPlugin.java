@@ -36,6 +36,20 @@ import net.runelite.client.plugins.PluginManager;
 @PluginDescriptor(name = "Potion Storage Customizer")
 @PluginDependency(AntiDragPlugin.class)
 public class PotionStorageCustomizerPlugin extends Plugin {
+    @Data
+    static class PotionPositions {
+        Point container;
+        Point icon;
+        Point nameLabel;
+        Point doseLabel;
+        Point favButton;
+        Point bar;
+        Point subBar;
+        Point barText;
+        int index;
+        PotionSectionWidget.Category section;
+    }
+
     static final String CONFIG_GROUP = "potionsstoragecustomizer";
 
     @Inject
@@ -56,24 +70,46 @@ public class PotionStorageCustomizerPlugin extends Plugin {
     @Inject
     private Gson gson;
 
-    @Data
-    static class PotionPositions {
-        Point container;
-        Point icon;
-        Point nameLabel;
-        Point doseLabel;
-        Point favButton;
-        Point bar;
-        Point subBar;
-        Point barText;
-        int index;
-        PotionSectionWidget.Category section;
-    }
-
     private Map<PotionSectionWidget.Category, Integer> lastSectionCounts = new HashMap<>();
 
     private final Map<String, PotionPositions> savedPositions = new HashMap<>();
     private PotionPanelWidget panel;
+
+    public int getAntiDragDelay() {
+        if (!isAntiDragActive()) {
+            return 0;
+        }
+        return configManager.getConfig(AntiDragConfig.class).dragDelay();
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event) {
+        if (panel == null)
+            return;
+
+        if ("antiDrag".equals(event.getGroup())) {
+            int delay = getAntiDragDelay();
+            panel.updateDragDeadTime(delay);
+        }
+
+        if (CONFIG_GROUP.equals(event.getGroup())) {
+            panel.enableDrag(!config.disableDrag(), savedPositions);
+        }
+    }
+
+    @Subscribe
+    public void onPluginChanged(PluginChanged event) {
+        if (event.getPlugin() != null &&
+                event.getPlugin().getClass().equals(AntiDragPlugin.class) &&
+                panel != null) {
+            int delay = getAntiDragDelay();
+            panel.updateDragDeadTime(delay);
+        }
+    }
+
+    public Client getClient() {
+        return client;
+    }
 
     // ensure this runs after potion storage bars plugin
     @Subscribe(priority = -1)
@@ -81,6 +117,24 @@ public class PotionStorageCustomizerPlugin extends Plugin {
         if (event.getScriptId() == ScriptID.POTIONSTORE_BUILD) {
             rebuildPanel();
         }
+    }
+
+    @Override
+    protected void startUp() {
+        // configManager.unsetConfiguration("potionstoragecustomizer",
+        // "potionPositions");
+        loadPositionsFromConfig();
+        loadSectionCountsFromConfig();
+    }
+
+    @Override
+    protected void shutDown() throws Exception {
+        log.debug("Potion Storage Customizer stopped!");
+    }
+
+    @Provides
+    PotionStorageCustomizerConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(PotionStorageCustomizerConfig.class);
     }
 
     private void rebuildPanel() {
@@ -142,59 +196,5 @@ public class PotionStorageCustomizerPlugin extends Plugin {
 
     private boolean isAntiDragActive() {
         return antiDragPlugin != null && pluginManager.isPluginEnabled(antiDragPlugin);
-    }
-
-    public int getAntiDragDelay() {
-        if (!isAntiDragActive()) {
-            return 0;
-        }
-        return configManager.getConfig(AntiDragConfig.class).dragDelay();
-    }
-
-    @Subscribe
-    public void onConfigChanged(ConfigChanged event) {
-        if (panel == null)
-            return;
-
-        if ("antiDrag".equals(event.getGroup())) {
-            int delay = getAntiDragDelay();
-            panel.updateDragDeadTime(delay);
-        }
-
-        if (CONFIG_GROUP.equals(event.getGroup())) {
-            panel.enableDrag(!config.disableDrag(), savedPositions);
-        }
-    }
-
-    @Subscribe
-    public void onPluginChanged(PluginChanged event) {
-        if (event.getPlugin() != null &&
-                event.getPlugin().getClass().equals(AntiDragPlugin.class) &&
-                panel != null) {
-            int delay = getAntiDragDelay();
-            panel.updateDragDeadTime(delay);
-        }
-    }
-
-    @Provides
-    PotionStorageCustomizerConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(PotionStorageCustomizerConfig.class);
-    }
-
-    public Client getClient() {
-        return client;
-    }
-
-    @Override
-    protected void startUp() {
-        // configManager.unsetConfiguration("potionstoragecustomizer",
-        // "potionPositions");
-        loadPositionsFromConfig();
-        loadSectionCountsFromConfig();
-    }
-
-    @Override
-    protected void shutDown() throws Exception {
-        log.debug("Potion Storage Customizer stopped!");
     }
 }

@@ -86,6 +86,74 @@ class PotionPanelWidget {
         }
     }
 
+    public void pruneMissingPotions(Map<String, PotionPositions> savedPositions) {
+        Set<String> currentPotions = new HashSet<>();
+        for (PotionSectionWidget section : potionSections) {
+            for (PotionWidget potion : section.potions) {
+                currentPotions.add(potion.getName());
+            }
+        }
+        savedPositions.entrySet().removeIf(entry -> !currentPotions.contains(entry.getKey()));
+    }
+
+    public boolean detectLayoutChange(Map<PotionSectionWidget.Category, Integer> lastSectionCounts) {
+        boolean changed = false;
+        for (PotionSectionWidget section : potionSections) {
+            Integer lastCount = lastSectionCounts.get(section.category);
+            int currentCount = section.potions.size();
+            if (lastCount == null || lastCount != currentCount) {
+                changed = true;
+            }
+            lastSectionCounts.put(section.category, currentCount);
+        }
+        return changed;
+    }
+
+    public void applyCustomPositions(Map<String, PotionPositions> savedPositions) {
+        for (PotionSectionWidget section : potionSections) {
+            sortPotionsByCustomOrder(section, savedPositions);
+            for (PotionWidget potion : section.potions) {
+                String potionName = potion.getName();
+                PotionPositions pos = savedPositions.get(potionName);
+
+                if (pos == null)
+                    continue;
+
+                potion.container.setOriginalX(pos.container.getX());
+                potion.container.setOriginalY(pos.container.getY());
+                potion.icon.setOriginalX(pos.icon.getX());
+                potion.icon.setOriginalY(pos.icon.getY());
+                potion.nameLabel.setOriginalX(pos.nameLabel.getX());
+                potion.nameLabel.setOriginalY(pos.nameLabel.getY());
+                potion.doseLabel.setOriginalX(pos.doseLabel.getX());
+                potion.doseLabel.setOriginalY(pos.doseLabel.getY());
+                potion.favButton.setOriginalX(pos.favButton.getX());
+                potion.favButton.setOriginalY(pos.favButton.getY());
+
+                if (potion.potionBar != null && potion.potionSubBar != null && potion.potionBarText != null
+                        && pos.bar != null && pos.subBar != null && pos.barText != null) {
+                    potion.potionBar.setOriginalX(pos.bar.getX());
+                    potion.potionBar.setOriginalY(pos.bar.getY());
+                    potion.potionSubBar.setOriginalX(pos.subBar.getX());
+                    potion.potionSubBar.setOriginalY(pos.subBar.getY());
+                    potion.potionBarText.setOriginalX(pos.barText.getX());
+                    potion.potionBarText.setOriginalY(pos.barText.getY());
+                    potion.potionBar.revalidate();
+                    potion.potionSubBar.revalidate();
+                    potion.potionBarText.revalidate();
+                }
+
+                potion.index = pos.index;
+
+                potion.container.revalidate();
+                potion.icon.revalidate();
+                potion.nameLabel.revalidate();
+                potion.doseLabel.revalidate();
+                potion.favButton.revalidate();
+            }
+        }
+    }
+
     private void sortPotionsByCustomOrder(PotionSectionWidget section, Map<String, PotionPositions> savedPositions) {
         section.potions.sort((a, b) -> {
             PotionPositions posA = savedPositions.get(a.getName());
@@ -176,74 +244,6 @@ class PotionPanelWidget {
             potion.favButton.revalidate();
 
             savePosition(potion, savedPositions);
-        }
-    }
-
-    public void pruneMissingPotions(Map<String, PotionPositions> savedPositions) {
-        Set<String> currentPotions = new HashSet<>();
-        for (PotionSectionWidget section : potionSections) {
-            for (PotionWidget potion : section.potions) {
-                currentPotions.add(potion.getName());
-            }
-        }
-        savedPositions.entrySet().removeIf(entry -> !currentPotions.contains(entry.getKey()));
-    }
-
-    public boolean detectLayoutChange(Map<PotionSectionWidget.Category, Integer> lastSectionCounts) {
-        boolean changed = false;
-        for (PotionSectionWidget section : potionSections) {
-            Integer lastCount = lastSectionCounts.get(section.category);
-            int currentCount = section.potions.size();
-            if (lastCount == null || lastCount != currentCount) {
-                changed = true;
-            }
-            lastSectionCounts.put(section.category, currentCount);
-        }
-        return changed;
-    }
-
-    public void applyCustomPositions(Map<String, PotionPositions> savedPositions) {
-        for (PotionSectionWidget section : potionSections) {
-            sortPotionsByCustomOrder(section, savedPositions);
-            for (PotionWidget potion : section.potions) {
-                String potionName = potion.getName();
-                PotionPositions pos = savedPositions.get(potionName);
-
-                if (pos == null)
-                    continue;
-
-                potion.container.setOriginalX(pos.container.getX());
-                potion.container.setOriginalY(pos.container.getY());
-                potion.icon.setOriginalX(pos.icon.getX());
-                potion.icon.setOriginalY(pos.icon.getY());
-                potion.nameLabel.setOriginalX(pos.nameLabel.getX());
-                potion.nameLabel.setOriginalY(pos.nameLabel.getY());
-                potion.doseLabel.setOriginalX(pos.doseLabel.getX());
-                potion.doseLabel.setOriginalY(pos.doseLabel.getY());
-                potion.favButton.setOriginalX(pos.favButton.getX());
-                potion.favButton.setOriginalY(pos.favButton.getY());
-
-                if (potion.potionBar != null && potion.potionSubBar != null && potion.potionBarText != null
-                        && pos.bar != null && pos.subBar != null && pos.barText != null) {
-                    potion.potionBar.setOriginalX(pos.bar.getX());
-                    potion.potionBar.setOriginalY(pos.bar.getY());
-                    potion.potionSubBar.setOriginalX(pos.subBar.getX());
-                    potion.potionSubBar.setOriginalY(pos.subBar.getY());
-                    potion.potionBarText.setOriginalX(pos.barText.getX());
-                    potion.potionBarText.setOriginalY(pos.barText.getY());
-                    potion.potionBar.revalidate();
-                    potion.potionSubBar.revalidate();
-                    potion.potionBarText.revalidate();
-                }
-
-                potion.index = pos.index;
-
-                potion.container.revalidate();
-                potion.icon.revalidate();
-                potion.nameLabel.revalidate();
-                potion.doseLabel.revalidate();
-                potion.favButton.revalidate();
-            }
         }
     }
 }
