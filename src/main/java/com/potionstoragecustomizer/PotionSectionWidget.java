@@ -54,6 +54,7 @@ class PotionSectionWidget {
         this.boundary.setOriginalHeight(height);
         this.boundary.setOriginalY(y);
         this.boundary.setOriginalX(0);
+        this.boundary.setOpacity(255);
 
         this.boundary.revalidate();
     }
