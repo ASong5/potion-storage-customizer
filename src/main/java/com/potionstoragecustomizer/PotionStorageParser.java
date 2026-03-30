@@ -83,7 +83,7 @@ class PotionStorageParser {
                     i += NEXT_POTION_OFFSET;
                     continue;
                 } else if (favouriteSpriteId == FAVOURITE_SPRITE_ID) {
-                    if (name.getText().contains("(unf)")) {
+                    if (name.getText().contains("(unf)") || name.getText().equals("Haemostatic poultice")) {
                         PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite,
                                 unfinishedSection, unfinishedSection.potions.size());
                         unfinishedSection.potions.add(potion);
