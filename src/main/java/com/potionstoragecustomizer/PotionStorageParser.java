@@ -7,7 +7,6 @@ import java.util.List;
 import com.potionstoragecustomizer.PotionSectionWidget.Category;
 
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Point;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetType;
 
@@ -29,6 +28,9 @@ class PotionStorageParser {
         PotionSectionWidget potionsSection = new PotionSectionWidget(Category.POTIONS);
         PotionSectionWidget unfinishedSection = new PotionSectionWidget(Category.UNFINISHED_POTIONS);
 
+        List<PotionWidget> allPotions = new ArrayList<>();
+        List<Widget[]> allBarGroups = new ArrayList<>();
+
         for (int i = 0; i < flatArray.length;) {
             if (flatArray[i].getText().contains("Vials")) {
                 i++;
@@ -36,13 +38,11 @@ class PotionStorageParser {
             }
 
             if (flatArray[i].getType() == WidgetType.RECTANGLE && !flatArray[i].isHidden()
-                    && flatArray[i].getHeight() < potionsSection.potions.get(0).container.getOriginalHeight()
-                    && flatArray[i].getWidth() < psItems.getWidth() / 2) {
-                List<PotionSectionWidget> sections = new ArrayList<PotionSectionWidget>();
-                sections.add(favouritesSection);
-                sections.add(potionsSection);
-                sections.add(unfinishedSection);
-                parsePotionStorageBars(i, flatArray, sections);
+                    && flatArray[i].getWidth() < psItems.getWidth() / 2
+                    && (!allPotions.isEmpty()
+                            && flatArray[i].getHeight() < allPotions.get(0).container.getOriginalHeight())) {
+                Widget[] barGroup = new Widget[]{flatArray[i], flatArray[i + 1], flatArray[i + 2]};
+                allBarGroups.add(barGroup);
                 i += POTION_STORAGE_PLUGIN_BAR_OFFSET;
                 continue;
             }
@@ -80,6 +80,7 @@ class PotionStorageParser {
                     PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite, favouritesSection,
                             favouritesSection.potions.size());
                     favouritesSection.potions.add(potion);
+                    allPotions.add(potion);
                     i += NEXT_POTION_OFFSET;
                     continue;
                 } else if (favouriteSpriteId == FAVOURITE_SPRITE_ID) {
@@ -87,12 +88,14 @@ class PotionStorageParser {
                         PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite,
                                 unfinishedSection, unfinishedSection.potions.size());
                         unfinishedSection.potions.add(potion);
+                        allPotions.add(potion);
                         i += NEXT_POTION_OFFSET;
                         continue;
                     } else {
                         PotionWidget potion = new PotionWidget(container, name, icon, dose, favourite,
                                 potionsSection, potionsSection.potions.size());
                         potionsSection.potions.add(potion);
+                        allPotions.add(potion);
                         i += NEXT_POTION_OFFSET;
                         continue;
                     }
@@ -105,27 +108,13 @@ class PotionStorageParser {
         panel.potionSections.add(potionsSection);
         panel.potionSections.add(unfinishedSection);
 
+        int count = Math.min(allBarGroups.size(), allPotions.size());
+        for (int j = 0; j < count; j++) {
+            Widget[] barGroup = allBarGroups.get(j);
+            allPotions.get(j).setPotionBar(barGroup[0], barGroup[1], barGroup[2]);
+        }
+
         return panel;
     }
 
-    private static void parsePotionStorageBars(int start, Widget[] flatArray, List<PotionSectionWidget> sections) {
-        Widget bar = flatArray[start];
-        Widget subBar = flatArray[start + 1];
-        Widget barText = flatArray[start + 2];
-
-        int barX = bar.getOriginalX();
-        int barY = bar.getOriginalY();
-
-        for (PotionSectionWidget section : sections) {
-            for (PotionWidget potion : section.potions) {
-                int doseX = potion.doseLabel.getOriginalX();
-                int doseY = potion.doseLabel.getOriginalY();
-
-                if (barX == doseX && barY == doseY) {
-                    potion.setPotionBar(bar, subBar, barText);
-                    return;
-                }
-            }
-        }
-    }
 }

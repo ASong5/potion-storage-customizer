@@ -72,6 +72,13 @@ class PotionPanelWidget {
             pos.subBar = new Point(potion.potionSubBar.getOriginalX(), potion.potionSubBar.getOriginalY());
             pos.barText = new Point(potion.potionBarText.getOriginalX(), potion.potionBarText.getOriginalY());
             log.info("saving potion bar");
+        } else {
+            PotionPositions existing = savedPositions.get(potion.getName());
+            if (existing != null) {
+                pos.bar = existing.bar;
+                pos.subBar = existing.subBar;
+                pos.barText = existing.barText;
+            }
         }
         pos.index = potion.index;
         pos.section = potion.section.category;
