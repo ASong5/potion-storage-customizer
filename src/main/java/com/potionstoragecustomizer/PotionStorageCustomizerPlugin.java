@@ -34,7 +34,6 @@ import net.runelite.client.plugins.PluginManager;
 
 @Slf4j
 @PluginDescriptor(name = "Potion Storage Customizer")
-@PluginDependency(AntiDragPlugin.class)
 public class PotionStorageCustomizerPlugin extends Plugin {
     @Data
     static class PotionPositions {
@@ -63,9 +62,6 @@ public class PotionStorageCustomizerPlugin extends Plugin {
 
     @Inject
     private PluginManager pluginManager;
-
-    @Inject
-    private AntiDragPlugin antiDragPlugin;
 
     @Inject
     private Gson gson;
@@ -195,6 +191,10 @@ public class PotionStorageCustomizerPlugin extends Plugin {
     }
 
     private boolean isAntiDragActive() {
+        AntiDragPlugin antiDragPlugin = (AntiDragPlugin) pluginManager.getPlugins().stream()
+                .filter(p -> p instanceof AntiDragPlugin)
+                .findFirst()
+                .orElse(null);
         return antiDragPlugin != null && pluginManager.isPluginEnabled(antiDragPlugin);
     }
 }
